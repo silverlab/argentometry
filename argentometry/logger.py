@@ -1,6 +1,6 @@
 import datetime, os
 
-class Logger:
+class Logger(object):
 	logDir = ""
 	logFile = ""
 	logData = {}
