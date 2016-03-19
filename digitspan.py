@@ -89,6 +89,7 @@ fseqs = []
 rseqs = []
 # wav sound file array
 soundFiles = []
+
 def main(argv):
   """Main method to be runned at beginning"""
   global logFile, programTime, dataPath
@@ -102,6 +103,7 @@ def main(argv):
         testNo = int(dlg.data[1])
       else:
         sys.exit(1)
+
       if(os.path.isfile("data/"+initials+"/"+logFile+str(testNo)+".txt")):
         error = gui.Dlg(title="Existing Log File",labelButtonOK=u'Yes',labelButtonCancel=u'No')
         error.addText("A log file with initials " + initials+ " already exists. Are you sure you want to overwrite? If not, answer no and change your initials." )
@@ -132,8 +134,11 @@ def main(argv):
   log("Test Number: " + str(testNo))
   win = visual.Window([800,600],monitor="testMonitor",units="deg",fullscr=True)
   mouse = event.Mouse(win=win)
-  winsound = sound.SoundPygame(value=CORRECT_FREQ, secs=TONE_LENGTH-0.1)
-  losesound = sound.SoundPygame(value=INCORRECT_FREQ, secs=TONE_LENGTH-0.1)
+
+  sound.init(48000, buffer=128)
+
+  winsound = sound.Sound(value=CORRECT_FREQ, secs=TONE_LENGTH-0.1)
+  losesound = sound.Sound(value=INCORRECT_FREQ, secs=TONE_LENGTH-0.1)
   loadSoundFiles()
   loadSequences()
 
@@ -163,8 +168,8 @@ def main(argv):
     random.shuffle(x)
     for i in x[:PRACTICE_TRIAL_LENGTH]:
       displayDigit(win,i)
-      win.flip()
-      core.wait(IN_BETWEEN_DIGITS_TIME)
+    win.flip()
+    core.wait(IN_BETWEEN_DIGITS_TIME)
     temp = validateSequence(win,mouse)
     correctSeq = x[:PRACTICE_TRIAL_LENGTH]
     if(temp[0]==correctSeq):
@@ -204,31 +209,39 @@ def main(argv):
             log("Max Forward Digit Span BLOCK "+str(block)+": " + str(maxForSpan[-1]))
             core.wait(5)
             break
+
           else:
             ss2 = lastss + 1
             sscount = 1
+
         else:
           ss2 = lastss
+
         x = []
         while len(x)<ss2:
           temp = random.randint(0,9)
           if not x or temp != x[-1]:
             x.append(temp)
+
       ss = len(x)
       if lastss == ss:
         sscount += 1
       else:
         sscount = 1
         numWrong = 0
+
       if ss not in results_forward:
         results_forward[ss] = []
+
       for dig in x:
         displayDigit(win,dig)
         win.flip()
         core.wait(IN_BETWEEN_DIGITS_TIME)
+
       temp = validateSequence(win,mouse)
       correctSeq = x
       results_forward[ss].append(1.0*sum([2 if l=='TT' else 1 if l=='FT' else 0 for l in correctness(temp[0],correctSeq)])/(2.0*ss))
+      
       if(temp[0]==correctSeq):
         tempLog = "(True,"
         winsound.play()
@@ -239,6 +252,7 @@ def main(argv):
         losesound.play()
         numWrong += 1
       log(tempLog+str(correctSeq)+","+str(temp[0])+","+str(correctness(temp[0],correctSeq))+","+str(ss)+","+str(temp[1])+")")
+      
       if numWrong >= MAX_FAILS:
         core.wait(TONE_LENGTH)
         visual.TextStim(win,text="This block is over. Your max forward Digit-Span was {0}".format(maxForSpan[-1])).draw()
@@ -246,6 +260,7 @@ def main(argv):
         log("Max Forward Digit Span BLOCK "+str(block)+": " + str(maxForSpan[-1]))
         core.wait(5)
         break
+
       win.flip()
       core.wait(TONE_LENGTH)
       lastss = ss
@@ -410,7 +425,7 @@ def loadSoundFiles():
   """Load wav files from sounds directory for audio presentation."""
   global soundFiles
   for i in range(10):
-    soundFiles.append(sound.SoundPygame(value=str("sounds/female_"+str(i)+".wav")))
+    soundFiles.append(sound.Sound(value=str("sounds/female_"+str(i)+".wav")))
 
 def loadSequences():
   """Loads preset sequences into memory"""
