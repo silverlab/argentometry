@@ -1,6 +1,6 @@
 from psychopy import visual, core, event, gui, sound
 from datetime import datetime
-import random, numpy, sys, os
+import random, numpy, sys, os, csv
 from collections import defaultdict
 import simplejson as json
 from pprint import pprint
@@ -14,7 +14,7 @@ class DigitSpan(object):
         self.N_PRACTICE_TRIALS = kwargs.get('practice_trials', 2)
         self.LEN_PRACTICE_TRIAL = kwargs.get('practice_trial_len', 3)
         self.DIGIT_DISPLAY_TIME = kwargs.get('digit_display_time', 0.500)
-        self.DIGIT_DISPLAY_GAP = kwargs.get('digit_display_gap', 0.500) # renamed from "IN_BETWEEN_DIGITS_TIME"
+        self.DIGIT_DISPLAY_GAP = kwargs.get('digit_display_gap', 0.300) # renamed from "IN_BETWEEN_DIGITS_TIME"
         self.NUM_TRIAL_BLOCKS = kwargs.get('trial_blocks', 1)
         self.sequence_range = { 
             'forward': {
@@ -39,7 +39,7 @@ class DigitSpan(object):
         while True:
             # tuple of form: (subject_id, test_number)
             subject_info = self.get_subject_info(sys.argv[1:])
-            self.log_file = os.path.join(self.DATA_DIR, '_'.join(subject_info) + '.json')
+            self.log_file = os.path.join(self.DATA_DIR, '_'.join(subject_info) + '.csv')
 
             if os.path.isfile(self.log_file):
                 rename_dialog = gui.Dlg(title = 'Error: Log File Exists')
@@ -58,9 +58,9 @@ class DigitSpan(object):
                 break
 
         # now log_file is a proper file
-        self.data = {}
-        self.section = {}  # better logging
-        self.section_num = 0
+        self.data = []
+        #self.section = {}  # better logging
+        #self.section_num = 0
         
         sound.init(48000, buffer=128)
 
@@ -132,22 +132,22 @@ class DigitSpan(object):
 
         # now we start section 1, practice trials
         # every time we end a section, we save self.section to self.data and restart self.section.
-        self.section_num += 1
+        #self.section_num += 1
 
         self.practice_trial()
 
         # end section 1, self.data[section_num] is set in the trial block itself 
         
         # begin section 2
-        self.section_num += 1
-        self.section = {}
+        #self.section_num += 1
+        #self.section = {}
 
         self.main_trial('forward')
         # end of section 2 - forward digit span
 
         # start section 3 - reverse digit span
-        self.section_num += 1
-        self.section = {}
+        #self.section_num += 1
+        #self.section = {}
 
         self.main_trial('reverse')
         # end section 3 - reverse digit span
@@ -177,12 +177,15 @@ class DigitSpan(object):
                 self.sound_incorrect.play()
 
             # we're going to offload ALL analysis to later stages. Task only records data.
-            self.section[trial_num] = {'expected': trial,
-                                       'actual': user_sequence[0],
-                                       'timestamp': user_sequence[1]}
+            #self.section[trial_num] = {'expected': trial,
+                                      # 'actual': user_sequence[0],
+                                      # 'timestamp': user_sequence[1]}
+            
+            # new data format is [trial_type, trial_num, expected, actual, timestamp]
+            self.data.append(['practice', trial_num, '-'.join(trial), '-'.join(user_sequence[0]), user_sequence[1]])
                                        
             core.wait(0.500)  # between trials
-        self.data[self.section_num] = self.section
+        #self.data[self.section_num] = self.section
 
     def main_trial(self, direction):
         intro_text = """In this section, listen to the sequence of numbers, \
@@ -225,7 +228,7 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                     sequence = self.sequences[direction][sequence_index]
                     sequence_size = len(sequence)
                     sequence_index += 1
-                    self.section[sequence_size] = []
+                    #self.section[sequence_size] = []
                 else:
                     if repeat >= 2:
                         # else, define a new random seq, but only until FORWARD_MAX
@@ -255,6 +258,8 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                 block[sequence_size].append({'expected': sequence,
                                              'actual': user_sequence[0],
                                              'timestamp': user_sequence[1]})
+                                             
+                self.data.append([direction, block_num, '-'.join(sequence), '-'.join(user_sequence[0]), user_sequence[1]])
        
                 if all(map(lambda x, y: x == y, user_sequence[0], sequence)):
                     self.sound_correct.play()
@@ -273,9 +278,9 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                 self.window.flip()
                 core.wait(0.5)
 
-            self.section[block_num] = dict(block)
+            #self.section[block_num] = dict(block)
 
-        self.data[self.section_num] = {direction: self.section}
+        #self.data[self.section_num] = {direction: self.section}
 
     def get_subject_info(self, args = []):
         # no cli args
@@ -332,7 +337,11 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
 
         while True:
             if event.getKeys(keyList = ['q', 'escape']):
-                self.log_file.write(json.dumps(self.data))
+                #self.log_file.write(json.dumps(self.data))
+                logwriter = csv.writer(self.log_file, quotechar='"')
+                for line in self.data:
+                    logwriter.writerow(line)
+                    
                 self.log_file.close()
                 core.quit()
                 sys.exit(0)
@@ -353,9 +362,9 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                 return (clicked, timer.getTime())
                 # this is where it returns out from the while true loop!
 
-            if event.getKeys(keyList=['asterisk']):
-                clicked.append('*')
-                ast = visual.TextStim(self.window, text="*", color="DarkMagenta",
+            if event.getKeys(keyList=['x']):
+                clicked.append('x')
+                ast = visual.TextStim(self.window, text="x", color="DarkMagenta",
                                       pos=(-10 + 2 * len(numbers), 0))
                 ast.setAutoDraw(True)
                 ast.draw()
