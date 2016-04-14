@@ -59,9 +59,8 @@ class DigitSpan(object):
 
         # now log_file is a proper file
         self.data = []
-        #self.section = {}  # better logging
-        #self.section_num = 0
         
+        # this should load Pyo. However, it may require manually symlinking in the newest liblo.
         sound.init(48000, buffer=128)
 
         self.sound_correct = sound.Sound(value = 440, secs = 0.4)
@@ -131,26 +130,13 @@ class DigitSpan(object):
         core.wait(2)
 
         # now we start section 1, practice trials
-        # every time we end a section, we save self.section to self.data and restart self.section.
-        #self.section_num += 1
-
         self.practice_trial()
-
-        # end section 1, self.data[section_num] is set in the trial block itself 
         
         # begin section 2
-        #self.section_num += 1
-        #self.section = {}
-
         self.main_trial('forward')
-        # end of section 2 - forward digit span
 
         # start section 3 - reverse digit span
-        #self.section_num += 1
-        #self.section = {}
-
         self.main_trial('reverse')
-        # end section 3 - reverse digit span
         
         # we can show the user some additonal things, but we prefer to end.
         visual.TextStim(self.window, "Thank you for your participation.").draw()
@@ -176,16 +162,12 @@ class DigitSpan(object):
             else:
                 self.sound_incorrect.play()
 
-            # we're going to offload ALL analysis to later stages. Task only records data.
-            #self.section[trial_num] = {'expected': trial,
-                                      # 'actual': user_sequence[0],
-                                      # 'timestamp': user_sequence[1]}
-            
+            # we're going to offload ALL analysis to later stages. Task only records data.        
             # new data format is [trial_type, trial_num, expected, actual, timestamp]
+            # '-'.join(...) to facilitate CSV. Will be split in analysis.
             self.data.append(['practice', trial_num, '-'.join(trial), '-'.join(user_sequence[0]), user_sequence[1]])
                                        
             core.wait(0.500)  # between trials
-        #self.data[self.section_num] = self.section
 
     def main_trial(self, direction):
         intro_text = """In this section, listen to the sequence of numbers, \
@@ -210,8 +192,6 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
             sequence_size = len(sequence)
             repeat = 0
 
-            block = defaultdict(list)
-            block['meta'] = {}
 
             def bye(self):
                 visual.TextStim(self.window,
@@ -224,11 +204,9 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
             while True:
                 # if there's a pre-defined seq we can use, use it
                 if sequence_index < len(self.sequences[direction]):
-                    # easy
                     sequence = self.sequences[direction][sequence_index]
                     sequence_size = len(sequence)
                     sequence_index += 1
-                    #self.section[sequence_size] = []
                 else:
                     if repeat >= 2:
                         # else, define a new random seq, but only until FORWARD_MAX
@@ -253,12 +231,10 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                     self.window.flip()
                     core.wait(self.DIGIT_DISPLAY_GAP)
 
-                # take user input and log immediately 
+                # take user input and log immediately -> this is the function that actually reads in the data from the user
                 user_sequence = self.accept_sequence(direction is 'reverse')
-                block[sequence_size].append({'expected': sequence,
-                                             'actual': user_sequence[0],
-                                             'timestamp': user_sequence[1]})
-                                             
+
+                # write data...
                 self.data.append([direction, block_num, '-'.join(sequence), '-'.join(user_sequence[0]), user_sequence[1]])
        
                 if all(map(lambda x, y: x == y, user_sequence[0], sequence)):
@@ -269,7 +245,7 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                     self.sound_incorrect.play()
                     trials_wrong += 1
 
-                # if you fail twice in a row, you're done
+                # if you fail N times (2 default) in a row, you're done
                 if trials_wrong >= self.MAX_TRIALS_WRONG:
                     core.wait(0.5)  # ?
                     bye(self)
@@ -277,10 +253,6 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
 
                 self.window.flip()
                 core.wait(0.5)
-
-            #self.section[block_num] = dict(block)
-
-        #self.data[self.section_num] = {direction: self.section}
 
     def get_subject_info(self, args = []):
         # no cli args
@@ -298,9 +270,8 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
         elif len(args) == 2:
             subject_id = args[0].upper()
             subject_test_number = args[1]
-
         else:
-            print "Usage: digitspan.py [subject_id] [subject_test_number]"
+            print "Usage: digitspan.py [subject_id] [subject_test_number] -- Warning: functionality not gauranteed when called from CLI"
             sys.exit(1)
 
         return subject_id, subject_test_number
@@ -330,10 +301,12 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
         numbers = []  # list to hold pointers for display
         event.clearEvents()
 
-        # my thinking for this loop is as such:
+        # my thinking for this loop was:
         #   1. get the current keybuffer.
         #   2. loop through several possibilities and act accordingly
         #   3. repeat until the user hits enter, then break the loop and return.
+        # However, this doesn't work apparently, and the documentation for how getKeys()
+        # works is rather limited, even in Pygame
 
         while True:
             if event.getKeys(keyList = ['q', 'escape']):
@@ -348,15 +321,15 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
 
             if event.getKeys(keyList = ['backspace', 'delete', '[.]', 'period', '.']) and len(clicked) > 0:
                 clicked = clicked[:-1]
-                numbers[-1].setAutoDraw(False) # I don't think this is necessary
-                numbers = numbers[:-1] # ...[-1] should get GC'd and autoremoved from the window.
+                numbers[-1].setAutoDraw(False) # I don't think this is necessary before the next step.
+                numbers = numbers[:-1] # ...[-1] should get GC'd and autoremoved from the window. I think.
                 self.window.flip()
                 core.wait(0.200)
 
             if event.getKeys(keyList = ['num_enter', 'return']):
+                # I highly doubt these two are necessary. But apparently they are.
                 map(lambda n: n.setAutoDraw(False), numbers)
                 instructions.setAutoDraw(False)
-                # I highly doubt these last two are necessary. But apparently they are.
                 if reverse:
                     clicked.reverse();
                 return (clicked, timer.getTime())
@@ -372,7 +345,7 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                 self.window.flip()
                 core.wait(0.200)
 
-            for i in range(10):  # range(10) because we're looking for nums 0..9
+            for i in range(10):  # we're looking for nums 0..9
                 capture_list = "{0},num_{0},[{0}]".format(i).split(',')
                 if event.getKeys(keyList=capture_list):
                     clicked.append(i)
