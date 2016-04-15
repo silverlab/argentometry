@@ -9,13 +9,14 @@ class DigitSpan(object):
     def __init__(self, **kwargs):
         self.DATA_DIR = kwargs.get('data_dir', 'digitspan_data')
         self.MONITOR = kwargs.get('monitor', 'testMonitor')
-        self.MONITOR_RESOLUTION = kwargs.get('monitor_resolution', (800, 600))
+        self.MONITOR_RESOLUTION = kwargs.get('monitor_resolution', (1024, 768))
         self.SOUND_GENDER = kwargs.get('sound_gender', 'female')
         self.N_PRACTICE_TRIALS = kwargs.get('practice_trials', 2)
         self.LEN_PRACTICE_TRIAL = kwargs.get('practice_trial_len', 3)
         self.DIGIT_DISPLAY_TIME = kwargs.get('digit_display_time', 0.500)
         self.DIGIT_DISPLAY_GAP = kwargs.get('digit_display_gap', 0.300) # renamed from "IN_BETWEEN_DIGITS_TIME"
         self.NUM_TRIAL_BLOCKS = kwargs.get('trial_blocks', 1)
+        self.INTER_TRIAL_DELAY = kwargs.get('inter_trial_delay', 0.500)
         self.sequence_range = { 
             'forward': {
                 'min': kwargs.get('forward_min', 3),
@@ -150,24 +151,23 @@ class DigitSpan(object):
 
     def practice_trial(self):
         for trial_num in range(self.N_PRACTICE_TRIALS):
-            trial = random.sample(xrange(10), self.LEN_PRACTICE_TRIAL)
-            for num in trial:
+            expected = random.sample(xrange(10), self.LEN_PRACTICE_TRIAL)
+            for num in expected:
                self.display_digit(num)
             self.window.flip()
             core.wait(self.DIGIT_DISPLAY_GAP)
 
-            user_sequence = self.accept_sequence()
-            if user_sequence[0] == trial:
+            actual, timestamp = self.accept_sequence()
+            if actual == expected:
                 self.sound_correct.play()
             else:
                 self.sound_incorrect.play()
 
             # we're going to offload ALL analysis to later stages. Task only records data.        
             # new data format is [trial_type, trial_num, expected, actual, timestamp]
-            # '-'.join(...) to facilitate CSV. Will be split in analysis.
-            self.data.append(['practice', trial_num, '-'.join(trial), '-'.join(user_sequence[0]), user_sequence[1]])
+            self.write_data('practice', trial_num, expected, actual, timestamp)
                                        
-            core.wait(0.500)  # between trials
+            core.wait(self.INTER_TRIAL_DELAY)  # between trials
 
     def main_trial(self, direction):
         intro_text = """In this section, listen to the sequence of numbers, \
@@ -197,7 +197,6 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                 visual.TextStim(self.window,
                     text = "This block is over. Your max {0} digitspan was {1}.".format(direction, max_span)).draw()
                 self.window.flip()
-                block['meta']['max'] = max_span
                 core.wait(5)
 
             # while true is a bad habit
@@ -232,12 +231,13 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                     core.wait(self.DIGIT_DISPLAY_GAP)
 
                 # take user input and log immediately -> this is the function that actually reads in the data from the user
-                user_sequence = self.accept_sequence(direction is 'reverse')
+                actual, timestamp = self.accept_sequence(direction is 'reverse')
 
                 # write data...
-                self.data.append([direction, block_num, '-'.join(sequence), '-'.join(user_sequence[0]), user_sequence[1]])
+                self.write_data(direction, block_num, sequence, actual, timestamp);
+                #self.data.append([direction, block_num, '-'.join(sequence), '-'.join(user_sequence[0]), user_sequence[1]])
        
-                if all(map(lambda x, y: x == y, user_sequence[0], sequence)):
+                if all(map(lambda x, y: x == y, actual, sequence)):
                     self.sound_correct.play()
                     max_span = max(max_span, sequence_size)
                     trials_wrong = 0
@@ -357,6 +357,11 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                     self.window.flip()
                     core.wait(0.200)
                     break
+                    
+    def write_data(self, direction, trial_num, expected, actual, timestamp):
+        # '-'.join(...) for csv compat
+        self.data.append([direction, trial_num, 
+            '-'.join(str(i) for i in expected), '-'.join(str(i) for i in actual), timestamp])
 
 if __name__ == '__main__':
     ds = DigitSpan()
