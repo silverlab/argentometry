@@ -271,7 +271,7 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
             subject_id = args[0].upper()
             subject_test_number = args[1]
         else:
-            print "Usage: digitspan.py [subject_id] [subject_test_number] -- Warning: functionality not gauranteed when called from CLI"
+            print "Usage: digitspan.py [subject_id] [subject_test_number] -- Warning: functionality not guaranteed when called from CLI"
             sys.exit(1)
 
         return subject_id, subject_test_number
