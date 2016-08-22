@@ -2,7 +2,7 @@ from psychopy import visual, core, event, gui, sound
 from datetime import datetime
 import random, numpy, sys, os, csv
 from collections import defaultdict
-import simplejson as json
+import json
 from pprint import pprint
 
 class DigitSpan(object):
@@ -142,12 +142,15 @@ class DigitSpan(object):
         # we can show the user some additonal things, but we prefer to end.
         visual.TextStim(self.window, "Thank you for your participation.").draw()
         self.window.flip()
-
-        self.log_file.write(json.dumps(self.data))
+        print self.data
+        
+        csvwriter = csv.writer(self.log_file, delimiter = ',', quotechar = '"', quoting = csv.QUOTE_MINIMAL)
+        for row in self.data:
+            csvwriter.writerow(row)
+        
+        #self.log_file.write(json.dumps(self.data))
         self.log_file.close()
-        core.wait(3)
-        core.quit()
-        sys.exit(0)
+        pass
 
     def practice_trial(self):
         for trial_num in range(self.N_PRACTICE_TRIALS):
@@ -287,8 +290,8 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
             text = "Type the digits in the {0}".format('reverse ' if reverse else '') +
                    "order in which they were recited." +
                    "Press the delete button if you want to erase the last letter " +
-                   "you typed. For any digits you do not remember, use the asterisk (*) " +
-                   "button instead of guessing. Press enter when you are done.", 
+                   "you typed. For any digits you do not remember, press the letter x " +
+                   "instead of guessing. Press enter when you are done.", 
             pos = (0, 6),
             wrapWidth = 30)
         instructions.setAutoDraw(True)  # auto-rerender on each windowflip
@@ -364,5 +367,6 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
             '-'.join(str(i) for i in expected), '-'.join(str(i) for i in actual), timestamp])
 
 if __name__ == '__main__':
-    ds = DigitSpan()
+    ds = DigitSpan(monitor_resolution = (1600, 900))
     ds.run_task()
+    sys.exit(0)
