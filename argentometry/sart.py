@@ -1,327 +1,367 @@
 
 from psychopy import visual, core, event, gui, sound
-import random, numpy, sys, os
+import random
+import numpy
+import sys
+import os
+import csv
 from datetime import datetime
 from collections import namedtuple
 
 
 class SART(object):
-  def __init__(self, **kwargs):
-    self.DIGIT_DISPLAY_TIME = kwargs.get('digit_display_time', 0.250)
-    self.DIGIT_RANGE = kwargs.get('digit_range', (0, 9))
-    self.DIGIT_SIZES = kwargs.get('digit_sizes', [1.8, 2.7, 3.5, 3.8, 4.5])
-    self.TARGET_DIGIT = kwargs.get('target_digit', random.randint(*self.DIGIT_RANGE))
-    self.NUM_DIGIT_SETS = kwargs.get('num_digit_sets', 25)
-    self.MASK_TIME = kwargs.get('mask_time', 0.900)
-    self.MASK_DIAMETER = kwargs.get('mask_diameter', 3.0)
-    self.MAX_FAILS = kwargs.get('max_fails', 3)
-    self.CORRECT_FREQ = kwargs.get('correct_freq', 440)
-    self.WRONG_FREQ = kwargs.get('wrong_freq', 330)
-    self.TONE_LENGTH = kwargs.get('tone_length', 0.5)
-    self.PRACTICE_DIGIT_SETS = kwargs.get('practice_digit_sets', 2)
-    self.DATA_DIR = kwargs.get('data_dir', 'sart_data')
-    self.MONITOR_RESOLUTION = kwargs.get('monitor_resolution', (1024, 768))
-      
-    
-    if not os.path.isdir(self.DATA_DIR):
-      try:
-        os.mkdir(self.DATA_DIR)
-      except Exception as e:
-        print e.getMessage()
-        print "Error: cannot create data directory: " + self.DATA_DIR
-        sys.exit(1)
 
-    while True:
-      subject_info = self.get_subject_info(sys.argv[1:])
-      self.log_file = os.path.join(self.DATA_DIR, '_'.join(subject_info) + '.csv')
+    def __init__(self, **kwargs):
+        self.DIGIT_DISPLAY_TIME = kwargs.get('digit_display_time', 0.250)
+        self.DIGIT_RANGE = kwargs.get('digit_range', (0, 9))
+        self.DIGIT_SIZES = kwargs.get('digit_sizes', [1.8, 2.7, 3.5, 3.8, 4.5])
+        self.TARGET_DIGIT = kwargs.get(
+            'target_digit', random.randint(*self.DIGIT_RANGE))
+        self.NUM_DIGIT_SETS = kwargs.get('num_digit_sets', 25)
+        self.MASK_TIME = kwargs.get('mask_time', 0.900)
+        self.MASK_DIAMETER = kwargs.get('mask_diameter', 3.0)
+        self.MAX_FAILS = kwargs.get('max_fails', 3)
+        self.CORRECT_FREQ = kwargs.get('correct_freq', 440)
+        self.WRONG_FREQ = kwargs.get('wrong_freq', 330)
+        self.TONE_LENGTH = kwargs.get('tone_length', 0.5)
+        self.PRACTICE_DIGIT_SETS = kwargs.get('practice_digit_sets', 2)
+        self.DATA_DIR = kwargs.get('data_dir', 'sart_data')
+        self.MONITOR_RESOLUTION = kwargs.get('monitor_resolution', (1024, 768))
 
-      if os.path.isfile(self.log_file):
-        rename_dialog = gui.Dlg(title = 'Error: Log File Exists')
-        rename_dialog.addText('A log file with this subject id ({0}) and test number {1} already exists. Overwrite?'.format(*subject_info))
-        rename_dialog.show()
+        if not os.path.isdir(self.DATA_DIR):
+            try:
+                os.mkdir(self.DATA_DIR)
+            except Exception as e:
+                print e.getMessage()
+                print "Error: cannot create data directory: " + self.DATA_DIR
+                sys.exit(1)
 
-        if rename_dialog.OK:
-          break
-        else:
-          break
-      else:
-        break
-    self.log_file = open(self.log_file, "w")
+        while True:
+            subject_info = self.get_subject_info(sys.argv[1:])
+            self.log_file = os.path.join(
+                self.DATA_DIR, '_'.join(subject_info) + '.csv')
 
-    self.data = []
+            if os.path.isfile(self.log_file):
+                rename_dialog = gui.Dlg(title='Error: Log File Exists')
+                rename_dialog.addText(
+                    'A log file with this subject id ({0}) and test number {1} already exists. Overwrite?'.format(*subject_info))
+                rename_dialog.show()
 
-    self.Datum = namedtuple('Datum', ['trial', 'target', 'digit', 'success', 'rt', 'note'])
+                if rename_dialog.OK:
+                    break
+                else:
+                    break
+            else:
+                break
+        self.log_file = open(self.log_file, "w")
 
-    sound.init(48000, buffer = 128)
+        self.data = []
 
-      # why convention different from digitspan? no clue
-    self.sound_correct = sound.Sound(value = self.CORRECT_FREQ, secs = self.TONE_LENGTH)
-    self.sound_incorrect = sound.Sound(value = self.WRONG_FREQ, secs = self.TONE_LENGTH)
+        self.Datum = namedtuple(
+            'Datum', ['trial', 'target', 'digit', 'success', 'rt', 'note'])
+            
+        print "after datum"
 
-    self.window = visual.Window(self.MONITOR_RESOLUTION, monitor = 'testMonitor', units = 'cm', fullscr = False)
-    self.mouse = event.Mouse(win = self.window)
+        sound.init(48000, buffer=128)
 
-    self.MASTER_CLOCK = core.Clock()
-    self.TIMER = core.Clock()
+        # why convention different from digitspan? no clue
+        self.sound_correct = sound.Sound(
+            value=self.CORRECT_FREQ, secs=self.TONE_LENGTH)
+        self.sound_incorrect = sound.Sound(
+            value=self.WRONG_FREQ, secs=self.TONE_LENGTH)
+            
+        print "after sound"
 
-  def run_task(self):
-    instructions = visual.TextStim(self.window, text = "Practice\n\nIn this task, a number will be shown on the screen.\n\n" +  
-                                 "If it is not {0}, then click your mouse anywhere on the screen. If it is a {0}, then do not click anywhere.\n\n".format(self.TARGET_DIGIT) + 
-                                 "Please give equal importance to accuracy and speed.\n\nClick anywhere to continue.", wrapWidth = 30).draw()
-    self.window.flip()
+        self.window = visual.Window(
+            self.MONITOR_RESOLUTION, monitor='testMonitor', units='cm', fullscr=False)
+        self.mouse = event.Mouse(win=self.window)
+        
+        print "after win and mouse"
 
-    while 1 not in self.mouse.getPressed():
+        self.MASTER_CLOCK = core.Clock()
+        self.TIMER = core.Clock()
+        
+        print "after timer"
+
+    def run_task(self):
+        instructions = visual.TextStim(self.window, text="Practice\n\nIn this task, a number will be shown on the screen.\n\n" +
+                                       "If it is not {0}, then click your mouse anywhere on the screen. If it is a {0}, then do not click anywhere.\n\n".format(self.TARGET_DIGIT) +
+                                       "Please give equal importance to accuracy and speed.\n\nClick anywhere to continue.", wrapWidth=30).draw()
+        self.window.flip()
+
+        while 1 not in self.mouse.getPressed():
+            pass
+
+        visual.TextStim(
+            self.window, text="This is the sound of a correct response.").draw()
+        self.window.flip()
+        self.sound_correct.play()
+        core.wait(2)
+        visual.TextStim(
+            self.window, text="This is the sound of an incorrect response.").draw()
+        self.window.flip()
+        self.sound_incorrect.play()
+        core.wait(2)
+
+        self.practice_trial()
+
+        instructions = visual.TextStim(
+            self.window,
+            text="Sustained Attention\n\n" +
+            "In this task, a number will be shown on the screen.\n\n" +
+            "If it is not {0}, then click you rmouse anywhere on the screen. If it is {0}, do not click anywhere.\n\n".format(self.TARGET_DIGIT) +
+            "Please give equal importance to accuracy and speed.\n\n" +
+                 "Click anywhere to continue.",
+            wrapWidth=30).draw()
+
+        self.window.flip()
+
+        self.main_trial()
+
+        csvwriter = csv.writer(self.log_file, delimiter=',',
+                               quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        for row in self.data:
+            csvwriter.writerow(row)
+
+        self.log_file.close()
+        self.window.close()
         pass
 
-    visual.TextStim(self.window, text = "This is the sound of a correct response.").draw()
-    self.window.flip()
-    self.sound_correct.play()
-    core.wait(2)
-    visual.TextStim(self.window, text = "This is the sound of an incorrect response.").draw()
-    self.window.flip()
-    self.sound_incorrect.play()
-    core.wait(2)
+    def practice_trial(self):  # undocumented params
+        # all of the following more or less directly copied from the original
 
-    self.practice_trial()
+        # what?? perhaps to clear the queues?
+        while 1 not in self.mouse.getPressed():
+            pass
+        while 1 in self.mouse.getPressed():
+            pass
 
-    instructions = visual.TextStim(
-        self.window, 
-        text = "Sustained Attention\n\n" + 
-             "In this task, a number will be shown on the screen.\n\n" +
-             "If it is not {0}, then click you rmouse anywhere on the screen. If it is {0}, do not click anywhere.\n\n".format(self.TARGET_DIGIT) +
-             "Please give equal importance to accuracy and speed.\n\n" +
-             "Click anywhere to continue.", 
-          wrapWidth = 30).draw()
-          
-    self.window.flip()
+        mask1 = visual.Circle(
+            self.window, radius=self.MASK_DIAMETER / 2, pos=[0.05, -0.39], lineWidth=10)
+        mask2 = visual.TextStim(self.window, text="+",
+                                height=(self.MASK_DIAMETER + 2.4))
+        digitSet = range(self.DIGIT_RANGE[0], self.DIGIT_RANGE[
+                         1] + 1) * self.PRACTICE_DIGIT_SETS
+        random.shuffle(digitSet)
 
-    self.main_trial()
+        correct = 0
 
-    csvwriter = csv.writer(self.log_file, delimiter = ',', quotechar = '"', quoting = csv.QUOTE_MINIMAL)
-    for row in self.data:
-      csvwriter.writerow(row)
+        for digit in digitSet:
+            pressed = False
+            self.TIMER.reset()
 
-    self.log_file.close()
-    self.window.close()
-    pass
+            self.displayDigit(digit)
 
-  def practice_trial(self): # undocumented params
-    # all of the following more or less directly copied from the original
-  
-    # what?? perhaps to clear the queues?
-    while 1 not in self.mouse.getPressed():
-      pass
-    while 1 in self.mouse.getPressed():
-      pass
-    
-    mask1 = visual.Circle(self.window, radius = self.MASK_DIAMETER / 2, pos = [0.05, -0.39], lineWidth = 10)
-    mask2 = visual.TextStim(self.window, text = "+", height = (self.MASK_DIAMETER + 2.4))
-    digitSet = range(self.DIGIT_RANGE[0], self.DIGIT_RANGE[1] + 1) * self.PRACTICE_DIGIT_SETS
-    random.shuffle(digitSet)
-  
-    correct = 0
-  
-    for digit in digitSet:
-      pressed = False
-      self.TIMER.reset()
-  
-      self.displayDigit(digit)
-  
-      reactionTime = 0
-      
-      # in this loop the digit is visible
-      while self.TIMER.getTime() < self.DIGIT_DISPLAY_TIME * 2:
-        if 1 in self.mouse.getPressed() and not pressed:
-          reactionTime = self.TIMER.getTime()
-          pressed = True
-  
-          # first appending of data
-          d = self.Datum(trial = 'practice', 
-                         target = self.TARGET_DIGIT,
-                         digit = digit,
-                         success = (digit is not self.TARGET_DIGIT),
-                         rt = reactionTime,
-                         note = 'press nomask')
-  
-          if not d.success:
-            self.sound_incorrect.play()
-          else:
-            correct += 1
-            self.sound_correct.play()
-  
-      mask1.draw()
-      mask2.draw()
-      self.window.flip()
-  
-      # in this loop the digit is hidden and the mask is visible
-      while self.TIMER.getTime() < (self.DIGIT_DISPLAY_TIME + self.MASK_TIME) * 2:
-        if 1 in self.mouse.getPressed() and not pressed:
-          reactionTime = self.TIMER.getTime()
-          pressed = True
-  
-          d = self.Datum(trial = 'practice', 
-                   target = self.TARGET_DIGIT, 
-                   digit = digit, 
-                   success = (digit is not self.TARGET_DIGIT), 
-                   rt = reactionTime,
-                   note = 'press mask')
-  
-          if not d.success:
-            self.sound_incorrect.play()
-          else:
-            correct += 1 # for showing accuracy numbers
-            self.sound_correct.play()
-  
-        if event.getKeys(keyList = ['q', 'excape']):
-          # need to write data
-          core.quit()
-  
-      if not pressed and digit is self.TARGET_DIGIT:
-        reactionTime = self.TIMER.getTime()
-        correct += 1
-  
-        d = self.Datum('practice', self.TARGET_DIGIT, digit, True, reactionTime, 'nopress mask') # see documentation of params above
-        self.data.append(d)
-  
-    accuracy = (1.0 * correct) / len(digitSet)
-    feedback = visual.TextStim(self.window, text = "You had an accuracy of {:%}".format(accuracy))
-    feedback.draw()
-    self.window.flip()
-    core.wait(5)
+            reactionTime = 0
+            success = False
+            note = ''
 
-  def main_trial(self):
+            # in this loop the digit is visible
+            while self.TIMER.getTime() < self.DIGIT_DISPLAY_TIME * 2:
+                if 1 in self.mouse.getPressed() and not pressed:
+                    reactionTime = self.TIMER.getTime()
+                    pressed = True
+                    
+                    success=(digit is not self.TARGET_DIGIT)
+                    note='press nomask'
 
-    # flush mouse click queue
-    while 1 not in self.mouse.getPressed():
-      pass
-    while 1 in self.mouse.getPressed():
-      pass
+                    # mouseclick was registered before the mask was shown. 
+                    # The test was successful if the digit displayed
+                    # was NOT the target digit.
 
-    mask1 = visual.Circle(self.window, radius = self.MASK_DIAMETER / 2, pos = [0.01, -0.63], lineWidth = 10)
-    mask2 = visual.TextStim(self.window, text = "+", height = self.MASK_DIAMETER + 2.4)
-    digitSet = range(self.DIGIT_RANGE[0], self.DIGIT_RANGE[1] + 1) * self.NUM_DIGIT_SETS
-    random.shuffle(digitSet)
+                    if success:
+                        correct += 1
+                        self.sound_correct.play()
+                    else:
+                        self.sound_incorrect.play()
 
-    correct = 0
-    targetcorrect = 0
-    correctrt = []
-    incorrectrt = []
-    temprts = []
+            mask1.draw()
+            mask2.draw()
+            self.window.flip()
 
-    for digit in digitSet:
-      pressed = False
-      self.TIMER.reset()
-      self.displayDigit(digit)
-      reactionTime = 0
+            # in this loop the digit is hidden and the mask is visible
+            while self.TIMER.getTime() < (self.DIGIT_DISPLAY_TIME + self.MASK_TIME) * 2:
+                if 1 in self.mouse.getPressed() and not pressed:
+                    reactionTime = self.TIMER.getTime()
+                    pressed = True
 
-      while self.TIMER.getTime() < self.DIGIT_DISPLAY_TIME:
-        if 1 in self.mouse.getPressed() and not pressed:
+                    success=(digit is not self.TARGET_DIGIT)
+                    note='press mask'
 
-          reactionTime = self.TIMER.getTime()
-          pressed = True
+                    # mouseclick was registered after the mask was shown. 
+                    # The test was successful if the digit displayed
+                    # was NOT the target digit.
 
-          d = self.Datum(trial = 'main',
-                   target = self.TARGET_DIGIT,
-                   digit = digit,
-                   success = (digit is not self.TARGET_DIGIT),
-                   rt = reactionTime,
-                   note = 'press nomask')
+                    if success:
+                        correct += 1
+                        self.sound_correct.play()
+                    else:
+                        self.sound_incorrect.play()
 
-          if not d.success:
-            incorrectrt.append(reactionTime)
-            temprts = []
-            self.sound_incorrect.play()
-          else:
-            correct += 1
-            self.sound_correct.play()
-            temprts.append(reactionTime)
+                if event.getKeys(keyList=['q', 'excape']):
+                    # need to write data
+                    core.quit()
 
-          self.data.append(d)
+            if not pressed:
+                reactionTime = self.TIMER.getTime()
+                success = (digit is self.TARGET_DIGIT)
+                note = 'nopress'
 
-      mask1.draw()
-      mask2.draw()
-      self.window.flip()
+                # no mouseclick was registered.
+                # the test was successful if the target digit WAS the digit displayed.
 
-      while self.TIMER.getTime() < self.DIGIT_DISPLAY_TIME + self.MASK_TIME:
-        if 1 in self.mouse.getPressed() and not pressed:
-          reactionTime = self.TIMER.getTime()
-          pressed = True
+                if success:
+                    correct += 1
+                    self.sound_correct.play()
+                else:
+                    self.sound_incorrect.play()
 
-          d = self.Datum(trial = 'main',
-                   target = self.TARGET_DIGIT,
-                   digit = digit,
-                   success = (digit is not self.TARGET_DIGIT),
-                   rt = reactionTime,
-                   note = 'press mask')
+            d = self.Datum(trial = 'practice',
+                      target = self.TARGET_DIGIT,
+                      digit = digit,
+                      success = success,
+                      rt = reactionTime,
+                      note = note)
 
-          if not d.success:
-            incorrectrt.append(reactionTime)
-            temprts = []
-            self.sound_incorrect.play()
-          else:
-            correct += 1
-            self.sound_correct.play()
+            self.data.append(d)
 
-          self.data.append(d)
+        accuracy = (1.0 * correct) / len(digitSet)
+        feedback = visual.TextStim(
+            self.window, text="You had an accuracy of {:%}".format(accuracy))
+        feedback.draw()
+        self.window.flip()
+        core.wait(5)
 
-        if event.getKeys(keyList = ['q', 'escape']):
-          core.quit()
+    def main_trial(self):
 
-      if not pressed and digit is self.TARGET_DIGIT:
-        reactionTime = self.TIMER.getTime()
+        # flush mouse click queue
+        while 1 not in self.mouse.getPressed():
+            pass
+        while 1 in self.mouse.getPressed():
+            pass
 
-        d = self.Datum(trial = 'main',
-                   target = self.TARGET_DIGIT,
-                   digit = digit,
-                   success = True,
-                   rt = reactionTime,
-                   note = 'nopress mask')
+        mask1 = visual.Circle(
+            self.window, radius=self.MASK_DIAMETER / 2, pos=[0.01, -0.63], lineWidth=10)
+        mask2 = visual.TextStim(self.window, text="+",
+                                height=self.MASK_DIAMETER + 2.4)
+        digitSet = range(self.DIGIT_RANGE[0], self.DIGIT_RANGE[
+                         1] + 1) * self.NUM_DIGIT_SETS
+        random.shuffle(digitSet)
 
-        self.data.append(d)
-
-        if len(temprts) > 0:
-          correctrt.append(sum(temprts) * 1.0 / len(temprts))
-          # ???
-
+        correct = 0
+        targetcorrect = 0
+        correctrt = []
+        incorrectrt = []
         temprts = []
-        targetcorrect += 1
-        correct += 1
-        
-      print self.data[-1]
 
-    accuracy = (1.0 * correct) / len(digitSet)
-    targetaccuracy = (1.0 * targetcorrect) / self.NUM_DIGIT_SETS
-    feedback = visual.TextStim(self.window, text = "You had an accuracy of {:%}".format(targetaccuracy))
-    feedback.draw()
-    self.window.flip()
+        for digit in digitSet:
+            pressed = False
+            self.TIMER.reset()
+            self.displayDigit(digit)
 
-  def displayDigit(self, digit):
-    digit = visual.TextStim(self.window, text = str(digit))
-    digit.setHeight(random.choice(self.DIGIT_SIZES))
-    digit.draw()
-    self.window.flip()
+            reactionTime = 0
+            success = False
+            note = ''
 
-  def get_subject_info(self, args = []):
-    # no cli args
-    if len(args) == 0:
-        subject_info = gui.DlgFromDict(
-            dictionary={'Subject ID': '', 'Test Number': '1'},
-            title = 'SART Task')
+            while self.TIMER.getTime() < self.DIGIT_DISPLAY_TIME:
+                if 1 in self.mouse.getPressed() and not pressed:
+                    pressed = True
+                    reactionTime = self.TIMER.getTime()
+                    success=(digit is not self.TARGET_DIGIT)
+                    note='press nomask'
 
-        if (subject_info.OK):
-            subject_id = subject_info.data[0].upper()
-            subject_test_number = subject_info.data[1]
+                    if success:
+                        correct += 1
+                        self.sound_correct.play()
+                        temprts.append(reactionTime)
+                    else:
+                        incorrectrt.append(reactionTime)
+                        temprts = []
+                        self.sound_incorrect.play()
+
+            mask1.draw()
+            mask2.draw()
+            self.window.flip()
+
+            while self.TIMER.getTime() < self.DIGIT_DISPLAY_TIME + self.MASK_TIME:
+                if 1 in self.mouse.getPressed() and not pressed:
+                    pressed = True
+
+                    reactionTime = self.TIMER.getTime()
+                    success=(digit is not self.TARGET_DIGIT)
+                    note='press mask'
+
+                    if success:
+                        correct += 1
+                        self.sound_correct.play()
+                    else:
+                        incorrectrt.append(reactionTime)
+                        temprts = []
+                        self.sound_incorrect.play()
+
+                if event.getKeys(keyList=['q', 'escape']):
+                    core.quit()
+
+            if not pressed:
+                reactionTime = self.TIMER.getTime()
+                success = (digit is self.TARGET_DIGIT)
+                note = 'nopress'
+
+                # no mouseclick was registered.
+                # the test was successful if the target digit WAS the digit displayed.
+
+                if success:
+                    correct += 1
+                    self.sound_correct.play()
+                else:
+                    self.sound_incorrect.play()
+
+
+            d = self.Datum(trial='main',
+                           target=self.TARGET_DIGIT,
+                           digit=digit,
+                           success= success,
+                           rt=reactionTime,
+                           note=note)
+
+            self.data.append(d)
+
+            print d
+
+        accuracy = (1.0 * correct) / len(digitSet)
+        targetaccuracy = (1.0 * 5) / self.NUM_DIGIT_SETS
+        feedback = visual.TextStim(
+            self.window, text="--Disregard-- You had an accuracy of {:%}".format(targetaccuracy))
+        feedback.draw()
+        self.window.flip()
+
+    def displayDigit(self, digit):
+        digit = visual.TextStim(self.window, text=str(digit))
+        digit.setHeight(random.choice(self.DIGIT_SIZES))
+        digit.draw()
+        self.window.flip()
+
+    def get_subject_info(self, args=[]):
+        # no cli args
+        if len(args) == 0:
+            subject_info = gui.DlgFromDict(
+                dictionary={'Subject ID': '', 'Test Number': '1'},
+                title='SART Task')
+
+            if (subject_info.OK):
+                subject_id = subject_info.data[0].upper()
+                subject_test_number = subject_info.data[1]
+            else:
+                sys.exit(1)
+        # all args recvd
+        elif len(args) == 2:
+            subject_id = args[0].upper()
+            subject_test_number = args[1]
         else:
+            print "Usage: sart.py [subject_id] [test_number] -- Warning: functionality not guaranteed when called from CLI"
             sys.exit(1)
-    # all args recvd
-    elif len(args) == 2:
-        subject_id = args[0].upper()
-        subject_test_number = args[1]
-    else:
-        print "Usage: sart.py [subject_id] [test_number] -- Warning: functionality not guaranteed when called from CLI"
-        sys.exit(1)
 
-    return subject_id, subject_test_number
+        return subject_id, subject_test_number
 
 if __name__ == '__main__':
     task = SART()
