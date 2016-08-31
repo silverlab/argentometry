@@ -1,0 +1,44 @@
+=== How to use DigitSpan and SART v2.0 ===
+@author abizer@berkeley.edu
+
+Introduction
+
+These tasks are designed to be as plug-and-play as possible, with a simple CSV-based data output format.
+
+The tasks have been tested to run on PsychoPy Standalone version 1.84.0 only. The PsychoPy development team is not very consistent about maintaining backwards compatability of experiment scripts between versions, and the tasks may need updating to work with future releases.
+
+Usage:
+
+	DigitSpan:
+		1. Open PsychoPy 1.84.0
+		2. Open argentometry/digitspan.py
+		3. Click the green "run" button on the top row of the PsychoPy command ribbon
+		4. The test will begin. The instructions for the user are on the initial screen.
+		5. Once the test has successfully completed in its entirety, data will be written
+			to a folder entitled "digitspan_data" in the working directory, to a file named
+			'<subject_id>_<test_num>.csv'
+		6. Once the test has completed, (i.e., the "Thank you for your participation." screen
+			has shown), navigate to the PsychoPy IDE and press the red "end" button on the ribbon.
+			Due to a bug in recent versions on PsychoPy on x64 Macs, the program does not quit
+			successfully on its own and requires manual exiting.
+		7. If the test errors, or one needs to quit, the program can be ended by typing "q", or in 
+			the case of non-responsiveness, by pressing Command-Alt-Esc and selecting PsychoPy from the Force Quit menu.
+
+	SART:
+		1. Open PsychoPy 1.84.0
+		2. Open argentometry/sart.py
+		3. Click the green "run" button on the top row of the PsychoPy command ribbon
+		4. The test will begin. Instructions for the user will be presented on the initial screen.
+		5. Once the test has successfully completed, data will be written in a folder entitled "sart_data"		 in the working directory, to a file file named '<subject_id>_<test_num>.csv'.
+		6. Once the test has completed, (i.e. the "Thank you for your participation." screen has shown), 		navigate to the PsychoPy IDE and press the red "end" button on the ribbon to quit the program.
+			Due to bugs in the recent version of PsychoPy on x64 Macs, the program needs to be ended manually.
+		7. If the test errors, pressing "q" at any time during the trials will quit the test immediately. 		Alternatively, Command-Alt-Esc can be used to force PsychoPy to quit from the Force Quit menu.
+
+
+Development Notes:
+	The tasks have been written to be somewhat modular and adaptable. Changing parameters can be achieved by passing keyword arguments to the object created at the very bottom of each file. Please contibute any improvements, extensions, or bug fixes by contacting abizer@berkeley.edu. Credit is given to Omid Rhezaii, who wrote the initial version of the task, as well as to Sahar Yousef, Dr. Michael Silver, and Kelly Byrne.
+
+
+
+
+
