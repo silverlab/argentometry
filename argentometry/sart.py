@@ -59,8 +59,6 @@ class SART(object):
 
         self.Datum = namedtuple(
             'Datum', ['trial', 'target', 'digit', 'success', 'rt', 'note'])
-            
-        print "after datum"
 
         sound.init(48000, buffer=128)
 
@@ -69,19 +67,13 @@ class SART(object):
             value=self.CORRECT_FREQ, secs=self.TONE_LENGTH)
         self.sound_incorrect = sound.Sound(
             value=self.WRONG_FREQ, secs=self.TONE_LENGTH)
-            
-        print "after sound"
 
         self.window = visual.Window(
             self.MONITOR_RESOLUTION, monitor='testMonitor', units='cm', fullscr=False)
         self.mouse = event.Mouse(win=self.window)
-        
-        print "after win and mouse"
 
         self.MASTER_CLOCK = core.Clock()
         self.TIMER = core.Clock()
-        
-        print "after timer"
 
     def run_task(self):
         instructions = visual.TextStim(self.window, text="Practice\n\nIn this task, a number will be shown on the screen.\n\n" +
@@ -161,11 +153,11 @@ class SART(object):
                 if 1 in self.mouse.getPressed() and not pressed:
                     reactionTime = self.TIMER.getTime()
                     pressed = True
-                    
-                    success=(digit is not self.TARGET_DIGIT)
-                    note='press nomask'
 
-                    # mouseclick was registered before the mask was shown. 
+                    success = (digit is not self.TARGET_DIGIT)
+                    note = 'press nomask'
+
+                    # mouseclick was registered before the mask was shown.
                     # The test was successful if the digit displayed
                     # was NOT the target digit.
 
@@ -185,10 +177,10 @@ class SART(object):
                     reactionTime = self.TIMER.getTime()
                     pressed = True
 
-                    success=(digit is not self.TARGET_DIGIT)
-                    note='press mask'
+                    success = (digit is not self.TARGET_DIGIT)
+                    note = 'press mask'
 
-                    # mouseclick was registered after the mask was shown. 
+                    # mouseclick was registered after the mask was shown.
                     # The test was successful if the digit displayed
                     # was NOT the target digit.
 
@@ -208,7 +200,8 @@ class SART(object):
                 note = 'nopress'
 
                 # no mouseclick was registered.
-                # the test was successful if the target digit WAS the digit displayed.
+                # the test was successful if the target digit WAS the digit
+                # displayed.
 
                 if success:
                     correct += 1
@@ -216,12 +209,12 @@ class SART(object):
                 else:
                     self.sound_incorrect.play()
 
-            d = self.Datum(trial = 'practice',
-                      target = self.TARGET_DIGIT,
-                      digit = digit,
-                      success = success,
-                      rt = reactionTime,
-                      note = note)
+            d = self.Datum(trial='practice',
+                           target=self.TARGET_DIGIT,
+                           digit=digit,
+                           success=success,
+                           rt=reactionTime,
+                           note=note)
 
             self.data.append(d)
 
@@ -267,8 +260,8 @@ class SART(object):
                 if 1 in self.mouse.getPressed() and not pressed:
                     pressed = True
                     reactionTime = self.TIMER.getTime()
-                    success=(digit is not self.TARGET_DIGIT)
-                    note='press nomask'
+                    success = (digit is not self.TARGET_DIGIT)
+                    note = 'press nomask'
 
                     if success:
                         correct += 1
@@ -288,8 +281,8 @@ class SART(object):
                     pressed = True
 
                     reactionTime = self.TIMER.getTime()
-                    success=(digit is not self.TARGET_DIGIT)
-                    note='press mask'
+                    success = (digit is not self.TARGET_DIGIT)
+                    note = 'press mask'
 
                     if success:
                         correct += 1
@@ -308,7 +301,8 @@ class SART(object):
                 note = 'nopress'
 
                 # no mouseclick was registered.
-                # the test was successful if the target digit WAS the digit displayed.
+                # the test was successful if the target digit WAS the digit
+                # displayed.
 
                 if success:
                     correct += 1
@@ -316,11 +310,10 @@ class SART(object):
                 else:
                     self.sound_incorrect.play()
 
-
             d = self.Datum(trial='main',
                            target=self.TARGET_DIGIT,
                            digit=digit,
-                           success= success,
+                           success=success,
                            rt=reactionTime,
                            note=note)
 
