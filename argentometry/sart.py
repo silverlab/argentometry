@@ -28,6 +28,7 @@ class SART(object):
         self.DATA_DIR = kwargs.get('data_dir', 'sart_data')
         self.MONITOR_RESOLUTION = kwargs.get('monitor_resolution', (1024, 768))
 
+        # if the datadir doesn't exist, create it. 
         if not os.path.isdir(self.DATA_DIR):
             try:
                 os.mkdir(self.DATA_DIR)
@@ -36,6 +37,7 @@ class SART(object):
                 print "Error: cannot create data directory: " + self.DATA_DIR
                 sys.exit(1)
 
+        # then, collect the subject's ID and text number. If the file already exists, prompt to confirm overwrite
         while True:
             subject_info = self.get_subject_info(sys.argv[1:])
             self.log_file = os.path.join(
@@ -53,16 +55,18 @@ class SART(object):
                     break
             else:
                 break
-        self.log_file = open(self.log_file, "w")
+
+        #self.log_file = open(self.log_file, "w")
 
         self.data = []
 
+        # this is the basic data output format (to CSV)
         self.Datum = namedtuple(
             'Datum', ['trial', 'target', 'digit', 'success', 'rt', 'note'])
 
         sound.init(48000, buffer=128)
 
-        # why convention different from digitspan? no clue
+        # init components for rest of experiment
         self.sound_correct = sound.Sound(
             value=self.CORRECT_FREQ, secs=self.TONE_LENGTH)
         self.sound_incorrect = sound.Sound(
@@ -72,8 +76,8 @@ class SART(object):
             self.MONITOR_RESOLUTION, monitor='testMonitor', units='cm', fullscr=False)
         self.mouse = event.Mouse(win=self.window)
 
-        self.MASTER_CLOCK = core.Clock()
-        self.TIMER = core.Clock()
+        self.MASTER_CLOCK = core.Clock() # this is never used, holdover from original code
+        self.TIMER = core.Clock() 
 
     def run_task(self):
         instructions = visual.TextStim(self.window, text="Practice\n\nIn this task, a number will be shown on the screen.\n\n" +
@@ -81,6 +85,7 @@ class SART(object):
                                        "Please give equal importance to accuracy and speed.\n\nClick anywhere to continue.", wrapWidth=30).draw()
         self.window.flip()
 
+        # wait for a mouseclick to continue
         while 1 not in self.mouse.getPressed():
             pass
 
@@ -95,6 +100,7 @@ class SART(object):
         self.sound_incorrect.play()
         core.wait(2)
 
+        # run the practice trial
         self.practice_trial()
 
         instructions = visual.TextStim(
@@ -108,25 +114,32 @@ class SART(object):
 
         self.window.flip()
 
+        # wait for mouse click
+        while 1 not in self.mouse.getPressed():
+            pass
+
         self.main_trial()
 
-        csvwriter = csv.writer(self.log_file, delimiter=',',
-                               quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        for row in self.data:
-            csvwriter.writerow(row)
+        with open(self.log_file, "w") as output:
+            csvwriter = csv.writer(output, delimiter=',',
+                                   quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            for row in self.data:
+                csvwriter.writerow(row)
 
-        self.log_file.close()
+        goodbye = visual.TextStim(self.window, "Thank you for your participation.", wrapWidth = 30).draw()
+        self.window.flip()
+        core.wait(2)
+
         self.window.close()
         pass
 
-    def practice_trial(self):  # undocumented params
-        # all of the following more or less directly copied from the original
+    def practice_trial(self):
 
-        # what?? perhaps to clear the queues?
-        while 1 not in self.mouse.getPressed():
-            pass
-        while 1 in self.mouse.getPressed():
-            pass
+       # clear the mouseclick buffers
+        # while 1 not in self.mouse.getPressed():
+        #     pass
+        # while 1 in self.mouse.getPressed():
+        #     pass
 
         mask1 = visual.Circle(
             self.window, radius=self.MASK_DIAMETER / 2, pos=[0.05, -0.39], lineWidth=10)
@@ -227,11 +240,11 @@ class SART(object):
 
     def main_trial(self):
 
-        # flush mouse click queue
-        while 1 not in self.mouse.getPressed():
-            pass
-        while 1 in self.mouse.getPressed():
-            pass
+        # flush mouse click buffers
+        # while 1 not in self.mouse.getPressed():
+        #     pass
+        # while 1 in self.mouse.getPressed():
+        #     pass
 
         mask1 = visual.Circle(
             self.window, radius=self.MASK_DIAMETER / 2, pos=[0.01, -0.63], lineWidth=10)
@@ -242,10 +255,6 @@ class SART(object):
         random.shuffle(digitSet)
 
         correct = 0
-        targetcorrect = 0
-        correctrt = []
-        incorrectrt = []
-        temprts = []
 
         for digit in digitSet:
             pressed = False
@@ -266,10 +275,7 @@ class SART(object):
                     if success:
                         correct += 1
                         self.sound_correct.play()
-                        temprts.append(reactionTime)
                     else:
-                        incorrectrt.append(reactionTime)
-                        temprts = []
                         self.sound_incorrect.play()
 
             mask1.draw()
@@ -288,8 +294,6 @@ class SART(object):
                         correct += 1
                         self.sound_correct.play()
                     else:
-                        incorrectrt.append(reactionTime)
-                        temprts = []
                         self.sound_incorrect.play()
 
                 if event.getKeys(keyList=['q', 'escape']):
@@ -357,5 +361,5 @@ class SART(object):
         return subject_id, subject_test_number
 
 if __name__ == '__main__':
-    task = SART()
+    task = SART(monitor_resolution = (1600, 900))
     task.run_task()
