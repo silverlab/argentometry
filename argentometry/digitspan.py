@@ -394,5 +394,4 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
 if __name__ == '__main__':
     ds = DigitSpan(monitor_resolution=(1600, 900))
     ds.run_task()
-    print "exiting..."
     sys.exit(0)
