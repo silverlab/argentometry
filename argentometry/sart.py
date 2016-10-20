@@ -119,9 +119,9 @@ class SART(object):
 
         self.main_trial()
 
-        quit()
+        self.quit()
 
-    def quit():
+    def quit(self):
         with open(self.log_file, "w") as output:
             csvwriter = csv.writer(output, delimiter=',',
                                    quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -133,6 +133,7 @@ class SART(object):
         core.wait(2)
 
         self.window.close()
+        sys.exit(0)
 
 
     def practice_trial(self):
@@ -206,7 +207,7 @@ class SART(object):
                         self.sound_incorrect.play()
 
                 if event.getKeys(keyList=['q', 'excape']):
-                    quit()
+                    self.quit()
                     #core.quit()
 
             if not pressed:
@@ -299,7 +300,7 @@ class SART(object):
                         self.sound_incorrect.play()
 
                 if event.getKeys(keyList=['q', 'escape']):
-                    quit()
+                    self.quit()
                     #core.quit()
 
             if not pressed:
