@@ -1,4 +1,3 @@
-
 from psychopy import visual, core, event, gui, sound
 import random
 import numpy
@@ -79,7 +78,7 @@ class SART(object):
         self.MASTER_CLOCK = core.Clock() # this is never used, holdover from original code
         self.TIMER = core.Clock() 
 
-    def run_task(self):
+    def run(self):
         instructions = visual.TextStim(self.window, text="Practice\n\nIn this task, a number will be shown on the screen.\n\n" +
                                        "If it is not {0}, then click your mouse anywhere on the screen. If it is a {0}, then do not click anywhere.\n\n".format(self.TARGET_DIGIT) +
                                        "Please give equal importance to accuracy and speed.\n\nClick anywhere to continue.", wrapWidth=30).draw()
@@ -120,6 +119,9 @@ class SART(object):
 
         self.main_trial()
 
+        quit()
+
+    def quit():
         with open(self.log_file, "w") as output:
             csvwriter = csv.writer(output, delimiter=',',
                                    quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -131,7 +133,7 @@ class SART(object):
         core.wait(2)
 
         self.window.close()
-        pass
+
 
     def practice_trial(self):
 
@@ -204,8 +206,8 @@ class SART(object):
                         self.sound_incorrect.play()
 
                 if event.getKeys(keyList=['q', 'excape']):
-                    # need to write data
-                    core.quit()
+                    quit()
+                    #core.quit()
 
             if not pressed:
                 reactionTime = self.TIMER.getTime()
@@ -297,7 +299,8 @@ class SART(object):
                         self.sound_incorrect.play()
 
                 if event.getKeys(keyList=['q', 'escape']):
-                    core.quit()
+                    quit()
+                    #core.quit()
 
             if not pressed:
                 reactionTime = self.TIMER.getTime()
@@ -322,8 +325,6 @@ class SART(object):
                            note=note)
 
             self.data.append(d)
-
-            print d
 
         accuracy = (1.0 * correct) / len(digitSet)
         targetaccuracy = (1.0 * 5) / self.NUM_DIGIT_SETS
@@ -361,5 +362,5 @@ class SART(object):
         return subject_id, subject_test_number
 
 if __name__ == '__main__':
-    task = SART(monitor_resolution = (1600, 900))
-    task.run_task()
+    task = SART(data_dir = "kelly_data_sart", monitor_resolution = (1600, 900))
+    task.run()
