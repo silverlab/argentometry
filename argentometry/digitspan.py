@@ -119,7 +119,7 @@ class DigitSpan(object):
             self.MONITOR_RESOLUTION, monitor=self.MONITOR, units='deg', fullscr=False)
         self.mouse = event.Mouse(win=self.window)
 
-    def run_task(self):
+    def run(self):
         # initialization
         visual.TextStim(self.window,
                         text="Practice" + "\n\n" +
@@ -152,20 +152,27 @@ class DigitSpan(object):
         self.main_trial('reverse')
 
         # we can show the user some additonal things, but we prefer to end.
-        visual.TextStim(
-            self.window, "Thank you for your participation.").draw()
-        self.window.flip()
-        print self.data
+        
+
+    def quit(self):
 
         csvwriter = csv.writer(self.log_file, delimiter=',',
                                quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for row in self.data:
             csvwriter.writerow(row)
 
+        visual.TextStim(
+            self.window, "Thank you for your participation.").draw()
+        self.window.flip()
+        core.wait(3)
+
+        # print self.data
+
         # self.log_file.write(json.dumps(self.data))
         self.log_file.close()
         self.window.close()
-        pass
+        sys.exit(0)
+
 
     def practice_trial(self):
         for trial_num in range(self.N_PRACTICE_TRIALS):
@@ -336,13 +343,7 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
         while True:
             if event.getKeys(keyList=['q', 'escape']):
                 # self.log_file.write(json.dumps(self.data))
-                logwriter = csv.writer(self.log_file, quotechar='"')
-                for line in self.data:
-                    logwriter.writerow(line)
-
-                self.log_file.close()
-                core.quit()
-                sys.exit(0)
+                self.quit()
 
             if event.getKeys(keyList=['backspace', 'delete', '[.]', 'period', '.']) and len(clicked) > 0:
                 clicked = clicked[:-1]
@@ -392,6 +393,6 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
                           '-'.join(str(i) for i in expected), '-'.join(str(i) for i in actual), timestamp])
 
 if __name__ == '__main__':
-    ds = DigitSpan(monitor_resolution=(1600, 900))
-    ds.run_task()
+    ds = DigitSpan(data_dir = "kelly_data_digitspan", monitor_resolution=(1600, 900))
+    ds.run()
     sys.exit(0)
