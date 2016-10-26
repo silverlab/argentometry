@@ -16,6 +16,7 @@ class DigitSpan(object):
         self.DATA_DIR = kwargs.get('data_dir', 'digitspan_data')
         self.MONITOR = kwargs.get('monitor', 'testMonitor')
         self.MONITOR_RESOLUTION = kwargs.get('monitor_resolution', (1024, 768))
+        self.FULLSCREEN = kwargs.get('fullscreen', True)
         self.SOUND_GENDER = kwargs.get('sound_gender', 'female')
         self.N_PRACTICE_TRIALS = kwargs.get('practice_trials', 2)
         self.LEN_PRACTICE_TRIAL = kwargs.get('practice_trial_len', 3)
@@ -116,7 +117,7 @@ class DigitSpan(object):
 
         # after this line executes, the window is showing.
         self.window = visual.Window(
-            self.MONITOR_RESOLUTION, monitor=self.MONITOR, units='deg', fullscr=False)
+            self.MONITOR_RESOLUTION, monitor=self.MONITOR, units='deg', fullscr=self.FULLSCREEN)
         self.mouse = event.Mouse(win=self.window)
 
     def run(self):
