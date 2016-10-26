@@ -152,6 +152,7 @@ class DigitSpan(object):
         self.main_trial('reverse')
 
         # we can show the user some additonal things, but we prefer to end.
+        self.quit()
         
 
     def quit(self):
