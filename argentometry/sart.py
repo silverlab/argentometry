@@ -23,10 +23,10 @@ class SART(object):
         self.CORRECT_FREQ = kwargs.get('correct_freq', 440)
         self.WRONG_FREQ = kwargs.get('wrong_freq', 330)
         self.TONE_LENGTH = kwargs.get('tone_length', 0.5)
+        self.SOUND_INIT_SAMPLES = kwargs.get('sound_init_samples', 48000)
         self.PRACTICE_DIGIT_SETS = kwargs.get('practice_digit_sets', 2)
         self.DATA_DIR = kwargs.get('data_dir', 'sart_data')
         self.MONITOR_RESOLUTION = kwargs.get('monitor_resolution', (1024, 768))
-        self.FULLSCREEN = kwargs.get('fullscreen', True)
 
         # if the datadir doesn't exist, create it. 
         if not os.path.isdir(self.DATA_DIR):
@@ -64,7 +64,7 @@ class SART(object):
         self.Datum = namedtuple(
             'Datum', ['trial', 'target', 'digit', 'success', 'rt', 'note'])
 
-        sound.init(48000, buffer=128)
+        sound.init(self.SOUND_INIT_SAMPLES, buffer=128)
 
         # init components for rest of experiment
         self.sound_correct = sound.Sound(
@@ -73,7 +73,7 @@ class SART(object):
             value=self.WRONG_FREQ, secs=self.TONE_LENGTH)
 
         self.window = visual.Window(
-            self.MONITOR_RESOLUTION, monitor='testMonitor', units='cm', fullscr=self.FULLSCREEN)
+            self.MONITOR_RESOLUTION, monitor='testMonitor', units='cm', fullscr=True)
         self.mouse = event.Mouse(win=self.window)
 
         self.MASTER_CLOCK = core.Clock() # this is never used, holdover from original code
@@ -363,6 +363,6 @@ class SART(object):
 
         return subject_id, subject_test_number
 
-if __name__ == '__main__':
-    task = SART(data_dir = "kelly_data_sart", monitor_resolution = (1600, 900))
-    task.run()
+# if __name__ == '__main__':
+#     task = SART(data_dir = "kelly_data_sart", monitor_resolution = (1600, 900))
+#     task.run()

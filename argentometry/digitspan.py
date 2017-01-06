@@ -16,8 +16,9 @@ class DigitSpan(object):
         self.DATA_DIR = kwargs.get('data_dir', 'digitspan_data')
         self.MONITOR = kwargs.get('monitor', 'testMonitor')
         self.MONITOR_RESOLUTION = kwargs.get('monitor_resolution', (1024, 768))
-        self.FULLSCREEN = kwargs.get('fullscreen', True)
         self.SOUND_GENDER = kwargs.get('sound_gender', 'female')
+        self.SOUND_PATH = kwargs.get('sound_path', os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sounds'))
+        self.SOUND_INIT_SAMPLES = kwargs.get('sound_init_samples', 48000)
         self.N_PRACTICE_TRIALS = kwargs.get('practice_trials', 2)
         self.LEN_PRACTICE_TRIAL = kwargs.get('practice_trial_len', 3)
         self.DIGIT_DISPLAY_TIME = kwargs.get('digit_display_time', 0.500)
@@ -72,11 +73,11 @@ class DigitSpan(object):
 
         # this should load Pyo. However, it may require manually symlinking in
         # the newest liblo.
-        sound.init(48000, buffer=128)
+        sound.init(self.SOUND_INIT_SAMPLES, buffer=128)
 
         self.sound_correct = sound.Sound(value=440, secs=0.4)
         self.sound_incorrect = sound.Sound(value=330, secs=0.4)
-        self.sound_files = [sound.Sound(value=os.path.join('sounds', fn)) for fn in os.listdir('sounds')
+        self.sound_files = [sound.Sound(value=os.path.join('sounds', fn)) for fn in os.listdir(self.SOUND_PATH)
                             if fn.startswith(self.SOUND_GENDER) and fn.endswith('.wav')]
 
         # this is a bad way of doing this. Should load from a file.
@@ -117,7 +118,7 @@ class DigitSpan(object):
 
         # after this line executes, the window is showing.
         self.window = visual.Window(
-            self.MONITOR_RESOLUTION, monitor=self.MONITOR, units='deg', fullscr=self.FULLSCREEN)
+            self.MONITOR_RESOLUTION, monitor=self.MONITOR, units='deg', fullscr=True)
         self.mouse = event.Mouse(win=self.window)
 
     def run(self):
@@ -394,7 +395,7 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
         self.data.append([direction, trial_num,
                           '-'.join(str(i) for i in expected), '-'.join(str(i) for i in actual), timestamp])
 
-if __name__ == '__main__':
-    ds = DigitSpan(data_dir = "kelly_data_digitspan", monitor_resolution=(1600, 900))
-    ds.run()
-    sys.exit(0)
+# if __name__ == '__main__':
+#     ds = DigitSpan(data_dir = "kelly_data_digitspan", monitor_resolution=(1600, 900))
+#     ds.run()
+#     sys.exit(0)
