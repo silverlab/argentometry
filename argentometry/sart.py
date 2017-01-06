@@ -27,6 +27,7 @@ class SART(object):
         self.PRACTICE_DIGIT_SETS = kwargs.get('practice_digit_sets', 2)
         self.DATA_DIR = kwargs.get('data_dir', 'sart_data')
         self.MONITOR_RESOLUTION = kwargs.get('monitor_resolution', (1024, 768))
+        self.FULLSCREEN = kwargs.get('fullscreen', True)
 
         # if the datadir doesn't exist, create it. 
         if not os.path.isdir(self.DATA_DIR):
@@ -73,7 +74,7 @@ class SART(object):
             value=self.WRONG_FREQ, secs=self.TONE_LENGTH)
 
         self.window = visual.Window(
-            self.MONITOR_RESOLUTION, monitor='testMonitor', units='cm', fullscr=True)
+            self.MONITOR_RESOLUTION, monitor='testMonitor', units='cm', fullscr=self.FULLSCREEN)
         self.mouse = event.Mouse(win=self.window)
 
         self.MASTER_CLOCK = core.Clock() # this is never used, holdover from original code

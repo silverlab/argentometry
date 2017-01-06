@@ -37,6 +37,7 @@ class DigitSpan(object):
             }
         }
         self.MAX_TRIALS_WRONG = kwargs.get('max_wrong_trials', 2)
+        self.FULLSCREEN = kwargs.get('fullscreen', True)
 
         if not os.path.isdir(self.DATA_DIR):
             try:
@@ -118,7 +119,7 @@ class DigitSpan(object):
 
         # after this line executes, the window is showing.
         self.window = visual.Window(
-            self.MONITOR_RESOLUTION, monitor=self.MONITOR, units='deg', fullscr=True)
+            self.MONITOR_RESOLUTION, monitor=self.MONITOR, units='deg', fullscr=self.FULLSCREEN)
         self.mouse = event.Mouse(win=self.window)
 
     def run(self):
