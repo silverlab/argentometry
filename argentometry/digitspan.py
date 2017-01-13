@@ -78,8 +78,6 @@ class DigitSpan(object):
 
         self.sound_correct = sound.Sound(value=440, secs=0.4)
         self.sound_incorrect = sound.Sound(value=330, secs=0.4)
-        print 'sound path', self.SOUND_PATH
-        print [os.path.join('sounds', fn) for fn in os.listdir(self.SOUND_PATH)]
         self.sound_files = [sound.Sound(value=os.path.join(self.SOUND_PATH, fn)) for fn in os.listdir(self.SOUND_PATH)
                             if fn.startswith(self.SOUND_GENDER) and fn.endswith('.wav')]
 
