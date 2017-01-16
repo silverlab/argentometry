@@ -128,7 +128,7 @@ class DigitSpan(object):
                         text="Practice" + "\n\n" +
                         "In this task, you will hear a sequence of numbers. When the " +
                         "audio has finished, enter all of the numbers in the same " +
-                        "order as they were recited." + "\n\n" +
+                        "order as they were recited. " + "\n\n" +
                         "Press any key to continue.",
                         wrapWidth=30).draw()
 
@@ -321,7 +321,7 @@ as they were recited.""".format('same' if direction is 'forward' else 'REVERSE')
     def accept_sequence(self, reverse=False):
         instructions = visual.TextStim(self.window,
                                        text="Type the digits in the {0}".format('reverse ' if reverse else '') +
-                                       "order in which they were recited." +
+                                       "order in which they were recited. " +
                                        "Press the delete button if you want to erase the last letter " +
                                        "you typed. For any digits you do not remember, press the letter x " +
                                        "instead of guessing. Press enter when you are done.",
