@@ -1,8 +1,16 @@
 # ours
 
 digitspan_data/
-OSSS/
+OSSS.bak/
 analysisscripts/
+OSSS_dose_exp/
+*~
+\#*\#
+argentometry/kelly_data_*/
+pip-selfcheck.json
+
+.DS_Store
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
